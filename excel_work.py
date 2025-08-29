@@ -3,6 +3,7 @@
 from openpyxl import load_workbook
 from dotenv import load_dotenv
 
+#TODO Get the excel file from google drive
 def read_excel_from_drive(file_id: str, sheet: str, cell: str):
     url = f"https://drive.google.com/uc?export=download&id={file_id}"
     response = requests.get(url)
@@ -24,19 +25,19 @@ def read_cells(file_path:str, sheet_name: str, cell_x: str, cell_y: str):
     wb = load_workbook(file_path)
     sheet = wb[sheet_name]
     
-    # Get the values to calculate from the correct months
+    #TODO Get the values to calculate from the correct months
     value_x = sheet[cell_x].value
     value_y = sheet[cell_y].value
 
-    # Calculate all the expenses
+    #TODO Calculate all the expenses
 
-    # Call the write function to write the final value
+    #TODO Call the write function to write the final value
 
     wb.close()
     return value_x, value_y
 
 def write_cell(file_path:str, sheet_name: str, cell: str, value):
-    # Get the value to write and write
+    #TODO Get the value to write and write
     wb = load_workbook("file_path")
     sheet = wb["]
 
@@ -50,13 +51,13 @@ def main():
     file_path = os.getenv("FILE_PATH")
     sheet_name = "Despesas David 25"
 
-    # Get the values from first person
+    #TODO Get the values from first person
 
-    # Get the values from the second person
+    #TODO Get the values from the second person
 
-    # Calculate who spent more and how much owes the other person
+    #TODO Calculate who spent more and how much owes the other person
 
-    # Write how much it owes and who owes who 
+    #TODO Write how much it owes and who owes who 
     v_x, v_y = read_cells(file_path, sheet_name, "D16", "E16")	
     print(v_x)
     print(v_y)

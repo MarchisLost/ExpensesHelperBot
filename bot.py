@@ -46,4 +46,11 @@ async def fact(interaction: discord.Interaction):
     f = excel_work.get_random_fact()
     await interaction.response.send_message(f)
 
+#TODO Read for command to get the final price of who owes who, pinging the person
+
+#TODO Read for command to write on excel file that the months are payed
+
+
+
+ 
 bot.run(TOKEN)
