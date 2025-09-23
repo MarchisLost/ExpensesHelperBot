@@ -217,6 +217,7 @@ def edit_file_workflow(file_id, service=None):
 def read_cells(file_path: str, sheet_name: str):
     wb = load_workbook(file_path, data_only=True)
     sheet = wb[sheet_name]
+    # From C to M line 16, 24, 50, 39
 
     #TODO Get the values to calculate from the correct months
     value_x = sheet[cell_x].value
@@ -250,6 +251,9 @@ def main():
     local_file = edit_file_workflow(file_id)
     print(local_file)
 
+    #TODO Check last month with data and start on the month before until paid month found
+
+
     #TODO Get the values from first person
     v_1 = read_cells(local_file, sheet_1)
     print(v_1)
@@ -260,10 +264,10 @@ def main():
 
     #TODO Calculate who spent more and how much owes the other person
 
-    #TODO Write how much it owes and who owes who 
-    #v_x, v_y = read_cells(file_path, sheet_name, "D16", "E16")	
-    #print(v_x)
-    #print(v_y)
+    #TODO Write how much it owes and who owes who
+    # v_x, v_y = read_cells(file_path, sheet_name, "D16", "E16")
+    # print(v_x)
+    # print(v_y)
 
 
 if __name__ == "__main__":
