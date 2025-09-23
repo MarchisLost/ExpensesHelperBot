@@ -145,6 +145,7 @@ env.bak/
 venv.bak/
 credentials.json
 token.json
+CalculadoraDespesas.xlsx
 
 # Spyder project settings
 .spyderproject
