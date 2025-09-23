@@ -1,12 +1,12 @@
-from openpyxl import load_workbook
-from dotenv import load_dotenv
 import os
 import io
+from dotenv import load_dotenv
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseDownload
+from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
+from openpyxl import load_workbook
 
 # Scopes required for accessing Google Drive
 SCOPES = ['https://www.googleapis.com/auth/drive']
@@ -87,13 +87,53 @@ def download_file_by_id(file_id, destination_path, service=None):
         return False
 
 
-def download_file_by_name(file_name, destination_path, service=None):
+def get_file_for_editing(file_id, local_filename=None, service=None):
     """
-    Download a file from Google Drive by searching for its name.
+    Download a file from Google Drive for local editing.
 
     Args:
-        file_name (str): Name of the file to search for
-        destination_path (str): Local path where file will be saved
+        file_id (str): Google Drive file ID
+        local_filename (str): Optional local filename (defaults to original name)
+        service: Optional pre-authenticated Drive service object
+
+    Returns:
+        str: Path to the downloaded file, or None if failed
+    """
+    try:
+        if service is None:
+            service = authenticate_google_drive()
+
+        # Get file metadata first
+        file_metadata = service.files().get(fileId=file_id).execute()
+        original_name = file_metadata.get('name', f'file_{file_id}')
+
+        # Use provided filename or original name
+        if local_filename is None:
+            local_filename = original_name
+
+        print(f"Getting file: {original_name}")
+
+        # Download the file
+        success = download_file_by_id(file_id, local_filename, service)
+
+        if success:
+            print(f"File ready for editing: {local_filename}")
+            return local_filename
+        else:
+            return None
+
+    except Exception as e:
+        print(f"Error getting file: {str(e)}")
+        return None
+
+
+def save_file_back_to_drive(file_id, local_filename, service=None):
+    """
+    Save your edited local file back to Google Drive (updates the same file ID).
+
+    Args:
+        file_id (str): Google Drive file ID to update
+        local_filename (str): Path to your edited local file
         service: Optional pre-authenticated Drive service object
 
     Returns:
@@ -103,165 +143,91 @@ def download_file_by_name(file_name, destination_path, service=None):
         if service is None:
             service = authenticate_google_drive()
 
-        # Search for file by name
-        results = service.files().list(
-            q=f"name='{file_name}'",
-            fields="files(id, name)"
-        ).execute()
+        success = update_file_content(file_id, local_filename, service)
 
-        files = results.get('files', [])
+        if success:
+            print(f"File saved back to Google Drive! File ID: {file_id}")
 
-        if not files:
-            print(f"No file found with name: {file_name}")
-            return False
-
-        if len(files) > 1:
-            print(f"Multiple files found with name '{file_name}'. Using the first one.")
-
-        file_id = files[0]['id']
-        return download_file_by_id(file_id, destination_path, service)
+        return success
 
     except Exception as e:
-        print(f"Error searching/downloading file: {str(e)}")
+        print(f"Error saving file back to Drive: {str(e)}")
         return False
 
 
-def list_drive_files(service=None, max_results=10):
+def update_file_content(file_id, new_file_path, service=None):
     """
-    List files in Google Drive (useful for finding file IDs).
+    Update the content of an existing file in Google Drive.
 
     Args:
+        file_id (str): Google Drive file ID to update
+        new_file_path (str): Local path to the new content
         service: Optional pre-authenticated Drive service object
-        max_results (int): Maximum number of files to return
 
     Returns:
-        list: List of file dictionaries with id, name, and mimeType
+        bool: True if successful, False otherwise
     """
     try:
         if service is None:
             service = authenticate_google_drive()
 
-        results = service.files().list(
-            pageSize=max_results,
-            fields="files(id, name, mimeType, size)"
+        media = MediaFileUpload(new_file_path)
+        updated_file = service.files().update(
+            fileId=file_id,
+            media_body=media
         ).execute()
 
-        files = results.get('files', [])
-
-        if not files:
-            print('No files found.')
-            return []
-
-        print(f"Found {len(files)} files:")
-        for file in files:
-            size = file.get('size', 'Unknown size')
-            print(f"- {file['name']} (ID: {file['id']}) [{file['mimeType']}] - {size} bytes")
-
-        return files
+        print(f"File content updated successfully. File ID: {updated_file.get('id')}")
+        return True
 
     except Exception as e:
-        print(f"Error listing files: {str(e)}")
-        return []
+        print(f"Error updating file: {str(e)}")
+        return False
 
 
-def search_files(file_name=None, query=None, service=None, max_results=10):
+def edit_file_workflow(file_id, service=None):
     """
-    Search for files in Google Drive and return their IDs.
+    Complete workflow: download file, let you edit it, then save it back.
 
     Args:
-        file_name (str): Exact file name to search for
-        query (str): Custom search query (e.g., "name contains 'report'")
+        file_id (str): Google Drive file ID
         service: Optional pre-authenticated Drive service object
-        max_results (int): Maximum number of files to return
 
     Returns:
-        list: List of dictionaries with file info (id, name, mimeType)
+        str: Path to local file for editing
     """
-    try:
-        if service is None:
-            service = authenticate_google_drive()
+    print("=" * 50)
+    print("FILE EDITING WORKFLOW")
+    print("=" * 50)
 
-        # Build search query
-        if file_name:
-            search_query = f"name='{file_name}'"
-        elif query:
-            search_query = query
-        else:
-            search_query = ""  # Return all files
+    # Download the file
+    local_file = get_file_for_editing(file_id, service=service)
 
-        results = service.files().list(
-            q=search_query,
-            pageSize=max_results,
-            fields="files(id, name, mimeType, size, modifiedTime)"
-        ).execute()
+    if local_file:
+        print(f"\n✅ File downloaded: {local_file}")
+        # print(f"save_file_back_to_drive('{file_id}', '{local_file}')")
+        print("\n" + "=" * 50)
 
-        files = results.get('files', [])
-
-        if not files:
-            print('No files found.')
-            return []
-
-        print(f"Found {len(files)} file(s):")
-        for file in files:
-            size = file.get('size', 'Unknown size')
-            modified = file.get('modifiedTime', 'Unknown date')
-            print(f"- {file['name']}")
-            print(f"  ID: {file['id']}")
-            print(f"  Type: {file['mimeType']}")
-            print(f"  Size: {size} bytes")
-            print(f"  Modified: {modified}")
-            print()
-
-        return files
-
-    except Exception as e:
-        print(f"Error searching files: {str(e)}")
-        return []
+        return local_file
+    else:
+        print("❌ Failed to download file")
+        return None
 
 
-def get_file_id_by_name(file_name, service=None):
-    """
-    Get the file ID of a file by its name (returns first match).
-    
-    Args:
-        file_name (str): Name of the file to find
-        service: Optional pre-authenticated Drive service object
-    
-    Returns:
-        str: File ID if found, None otherwise
-    """
-    files = search_files(file_name=file_name, service=service, max_results=1)
-    return files[0]['id'] if files else None
+def read_cells(file_path: str, sheet_name: str):
+    wb = load_workbook(file_path, data_only=True)
+    sheet = wb[sheet_name]
 
+    #TODO Get the values to calculate from the correct months
+    value_x = sheet[cell_x].value
+    value_y = sheet[cell_y].value
 
-#TODO Get the excel file from google drive
-# def read_excel_from_drive(file_id: str, sheet: str, cell: str):
+    #TODO Calculate all the expenses
 
-#     wb = load_workbook(file)
-#     ws = wb[sheet]
+    #TODO Call the write function to write the final value
 
-#     value = ws[cell].value
-#     wb.close()
-#     return value
-
-# # Usage: Pass the Google Drive file ID (the long string in the link)
-# val = read_excel_from_drive("YOUR_FILE_ID", "Sheet1", "A1")
-# print("Value in A1:", val)
-
-# def read_cells(file_path:str, sheet_name: str, cell_x: str, cell_y: str):
-#     wb = load_workbook(file_path)
-#     sheet = wb[sheet_name]
-    
-#     #TODO Get the values to calculate from the correct months
-#     value_x = sheet[cell_x].value
-#     value_y = sheet[cell_y].value
-
-#     #TODO Calculate all the expenses
-
-#     #TODO Call the write function to write the final value
-
-#     wb.close()
-#     return value_x, value_y
+    wb.close()
+    return value_x, value_y
 
 # def write_cell(file_path:str, sheet_name: str, cell: str, value):
 #     #TODO Get the value to write and write
@@ -273,14 +239,24 @@ def get_file_id_by_name(file_name, service=None):
 #     wb.save(FILE_PATH)
 #     wb.close()
 
+
 def main():
     load_dotenv()
-    # file_path = os.getenv("FILE_PATH")
-    # sheet_name = "Despesas David 25"
+    file_id = os.getenv("FILE_ID")
+    sheet_1 = os.getenv("SHEET_1")
+    sheet_2 = os.getenv("SHEET_2")
+
+    # Get file
+    local_file = edit_file_workflow(file_id)
+    print(local_file)
 
     #TODO Get the values from first person
+    v_1 = read_cells(local_file, sheet_1)
+    print(v_1)
 
     #TODO Get the values from the second person
+    v_2 = read_cells(local_file, sheet_2)
+    print(v_2)
 
     #TODO Calculate who spent more and how much owes the other person
 
@@ -289,9 +265,6 @@ def main():
     #print(v_x)
     #print(v_y)
 
-    # Get file id
-    file_id = get_file_id_by_name("CalculadoraDespesas.xlsx")
-    print(file_id)
 
 if __name__ == "__main__":
     main()
