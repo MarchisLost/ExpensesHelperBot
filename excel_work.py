@@ -253,11 +253,10 @@ def get_last_month(file_path: str, sheet_name: str):
         if cell_value is None or str(cell_value).strip() == "0":
             break  # Stop at first empty column
 
-        col_letter = utils.get_column_letter(col)
-        print(f"{col_letter}{row_number}: {cell_value}")
+        last_column = utils.get_column_letter(col)
+        # print(f"{last_column}{row_number}: {cell_value}")
 
-    # value_x = sheet[cell_x].value
-    # value_y = sheet[cell_y].value
+    return last_column
 
 
 def main():
@@ -265,13 +264,15 @@ def main():
     file_id = os.getenv("FILE_ID")
     sheet_1 = os.getenv("SHEET_1")
     sheet_2 = os.getenv("SHEET_2")
+
     # Get file
     local_file = edit_file_workflow(file_id)
     print(local_file)
 
-    #TODO Check last month with data and start on the month before until paid month found
-    last_month_1 = get_last_month(local_file, sheet_1)
-    # last_month_2 = read_cells(local_file, sheet_2)
+    # Check last month with data to get the end month fo calculations
+    last_month = get_last_month(local_file, sheet_1)
+    print(last_month)
+
     # print(last_month_1)
     # print(last_month_2)
 
