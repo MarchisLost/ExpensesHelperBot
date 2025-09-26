@@ -6,7 +6,7 @@ from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
-from openpyxl import load_workbook
+from openpyxl import load_workbook, utils
 
 # Scopes required for accessing Google Drive
 SCOPES = ['https://www.googleapis.com/auth/drive']
@@ -241,26 +241,47 @@ def read_cells(file_path: str, sheet_name: str):
 #     wb.close()
 
 
+def get_last_month(file_path: str, sheet_name: str):
+    wb = load_workbook(file_path, data_only=True)
+    sheet = wb[sheet_name]
+
+    # Loop through columns C(3) to N(14)
+    row_number = 16
+    for col in range(3, sheet.max_column + 1):  # Start from C
+        cell_value = sheet.cell(row=row_number, column=col).value
+
+        if cell_value is None or str(cell_value).strip() == "0":
+            break  # Stop at first empty column
+
+        col_letter = utils.get_column_letter(col)
+        print(f"{col_letter}{row_number}: {cell_value}")
+
+    # value_x = sheet[cell_x].value
+    # value_y = sheet[cell_y].value
+
+
 def main():
     load_dotenv()
     file_id = os.getenv("FILE_ID")
     sheet_1 = os.getenv("SHEET_1")
     sheet_2 = os.getenv("SHEET_2")
-
     # Get file
     local_file = edit_file_workflow(file_id)
     print(local_file)
 
     #TODO Check last month with data and start on the month before until paid month found
+    last_month_1 = get_last_month(local_file, sheet_1)
+    # last_month_2 = read_cells(local_file, sheet_2)
+    # print(last_month_1)
+    # print(last_month_2)
 
+    # #TODO Get the values from first person
+    # v_1 = read_cells(local_file, sheet_1)
+    # print(v_1)
 
-    #TODO Get the values from first person
-    v_1 = read_cells(local_file, sheet_1)
-    print(v_1)
-
-    #TODO Get the values from the second person
-    v_2 = read_cells(local_file, sheet_2)
-    print(v_2)
+    # #TODO Get the values from the second person
+    # v_2 = read_cells(local_file, sheet_2)
+    # print(v_2)
 
     #TODO Calculate who spent more and how much owes the other person
 
