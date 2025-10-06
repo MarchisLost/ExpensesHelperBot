@@ -214,21 +214,30 @@ def edit_file_workflow(file_id, service=None):
         return None
 
 
-def read_cells(file_path: str, sheet_name: str):
+def read_cells(file_path: str, sheet_name: str, last_column: int, start_col: int):
     wb = load_workbook(file_path, data_only=True)
     sheet = wb[sheet_name]
-    # From C to M line 16, 24, 50, 39
+
+    # From C to N line 16, 24, 50, 39
+    row_number = [16, 24, 50, 39]
+
+    #TODO create for loop to go through the column letters
+    for col in range(start_col, last_column):
+        for row in row_number:
+            cell_value = sheet.cell(row=row, column=col).value
+            print(f"Row/Col: {row}-{col} and cell value: {cell_value}")
 
     #TODO Get the values to calculate from the correct months
-    value_x = sheet[cell_x].value
-    value_y = sheet[cell_y].value
+    # value_x = sheet[+"16"].value
+    # value_y = sheet[cell_y].value
 
     #TODO Calculate all the expenses
 
     #TODO Call the write function to write the final value
 
     wb.close()
-    return value_x, value_y
+    return True
+
 
 # def write_cell(file_path:str, sheet_name: str, cell: str, value):
 #     #TODO Get the value to write and write
@@ -247,16 +256,17 @@ def get_last_month(file_path: str, sheet_name: str):
 
     # Loop through columns C(3) to N(14)
     row_number = 16
-    for col in range(3, sheet.max_column + 1):  # Start from C
+    for col in range(3, 15):  # Start from C
         cell_value = sheet.cell(row=row_number, column=col).value
 
         if cell_value is None or str(cell_value).strip() == "0":
             break  # Stop at first empty column
 
-        last_column = utils.get_column_letter(col)
+        # This right now is useless because i want the number of the column and not the letter
+        # last_column = utils.get_column_letter(col)
         # print(f"{last_column}{row_number}: {cell_value}")
 
-    return last_column
+    return col
 
 
 def main():
@@ -265,31 +275,51 @@ def main():
     sheet_1 = os.getenv("SHEET_1")
     sheet_2 = os.getenv("SHEET_2")
 
+    # Get starting month/column
+    month_to_col = {
+        'jan': 3,
+        'fev': 4,
+        'mar': 5,
+        'abr': 6,
+        'mai': 7,
+        'jun': 8,
+        'jul': 9,
+        'ago': 10,
+        'set': 11,
+        'out': 12,
+        'nov': 13,
+        'dez': 14
+    }
+
     # Get file
     local_file = edit_file_workflow(file_id)
     print(local_file)
 
-    # Check last month with data to get the end month fo calculations
+    # Check last month with data to get the end month of calculations
     last_month = get_last_month(local_file, sheet_1)
-    print(last_month)
+    # print(last_month)
 
-    # print(last_month_1)
-    # print(last_month_2)
+    #TODO Get the values from first person
+    try:
+        user_month = input("Enter starting month (Jan, Fev, Mar...): ").lower().strip()
+        start_col = month_to_col.get(user_month)
+    except:
+        print("Invalid month!")
+    else:
+        print(f'Valid month {user_month}!')
+        v_1 = read_cells(local_file, sheet_1, last_month, start_col)
+        print(v_1)
 
-    # #TODO Get the values from first person
-    # v_1 = read_cells(local_file, sheet_1)
-    # print(v_1)
+        #TODO Get the values from the second person
+        # v_2 = read_cells(local_file, sheet_2)
+        # print(v_2)
 
-    # #TODO Get the values from the second person
-    # v_2 = read_cells(local_file, sheet_2)
-    # print(v_2)
+        #TODO Calculate who spent more and how much owes the other person
 
-    #TODO Calculate who spent more and how much owes the other person
-
-    #TODO Write how much it owes and who owes who
-    # v_x, v_y = read_cells(file_path, sheet_name, "D16", "E16")
-    # print(v_x)
-    # print(v_y)
+        #TODO Write how much it owes and who owes who
+        # v_x, v_y = read_cells(file_path, sheet_name, "D16", "E16")
+        # print(v_x)
+        # print(v_y)
 
 
 if __name__ == "__main__":
