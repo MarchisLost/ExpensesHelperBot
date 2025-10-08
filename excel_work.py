@@ -21,22 +21,66 @@ def authenticate_google_drive():
     """
     creds = None
 
-    # Check if token.json exists (stored credentials)
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    # Try to load credentials from environment variables
+    token = os.getenv('GOOGLE_DRIVE_TOKEN')
+    refresh_token = os.getenv('GOOGLE_DRIVE_REFRESH_TOKEN')
+    client_id = os.getenv('GOOGLE_DRIVE_CLIENT_ID')
+    client_secret = os.getenv('GOOGLE_DRIVE_CLIENT_SECRET')
 
-    # If no valid credentials, get new ones
+    if token and refresh_token and client_id and client_secret:
+        creds = Credentials(
+            token=token,
+            refresh_token=refresh_token,
+            client_id=client_id,
+            client_secret=client_secret,
+            token_uri='https://oauth2.googleapis.com/token',
+            scopes=SCOPES
+        )
+
+    # If no valid credentials from env, use credentials.json
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            # You need to download credentials.json from Google Cloud Console
+            try:
+                print("Token expired, refreshing...")
+                creds.refresh(Request())
+                print("Token refreshed successfully!")
+
+                # Print new token for .env file
+                print("\n" + "="*50)
+                print("UPDATE YOUR .ENV FILE WITH NEW TOKEN:")
+                print("="*50)
+                print(f"GOOGLE_DRIVE_TOKEN={creds.token}")
+                print("(Keep the other variables the same)")
+                print("="*50 + "\n")
+            except Exception as e:
+                print(f"Failed to refresh token: {e}")
+                print("Re-authenticating...")
+                creds = None  # Force re-authentication
+
+        if not creds:
+            # Check if credentials.json exists
+            if not os.path.exists('credentials.json'):
+                raise FileNotFoundError(
+                    "credentials.json not found. Please:\n"
+                    "1. Download credentials.json from Google Cloud Console\n"
+                    "2. Place it in the same directory as this script\n"
+                    "OR set up environment variables in your .env file"
+                )
+
+            # Use credentials.json for first-time authentication
             flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
 
-        # Save credentials for next run
-        with open('token.json', 'w') as token:
-            token.write(creds.to_json())
+            # Print tokens to help set up .env file
+            print("\n" + "="*50)
+            print("AUTHENTICATION SUCCESSFUL!")
+            print("Add these to your .env file:")
+            print("="*50)
+            print(f"GOOGLE_DRIVE_TOKEN={creds.token}")
+            print(f"GOOGLE_DRIVE_REFRESH_TOKEN={creds.refresh_token}")
+            print(f"GOOGLE_DRIVE_CLIENT_ID={creds.client_id}")
+            print(f"GOOGLE_DRIVE_CLIENT_SECRET={creds.client_secret}")
+            print("="*50 + "\n")
 
     return build('drive', 'v3', credentials=creds)
 
