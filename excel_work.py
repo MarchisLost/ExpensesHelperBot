@@ -258,29 +258,27 @@ def edit_file_workflow(file_id, service=None):
         return None
 
 
-def read_cells(file_path: str, sheet_name: str, last_column: int, start_col: int):
+def read_cells(file_path: str, sheet_name: str, start_col: int, last_column: int):
     wb = load_workbook(file_path, data_only=True)
     sheet = wb[sheet_name]
 
     # From C to N line 16, 24, 50, 39
     row_number = [16, 24, 50, 39]
+    total = 0
 
-    #TODO create for loop to go through the column letters
+    #TODO create for loop to go through the column letters and add all the values
     for col in range(start_col, last_column):
         for row in row_number:
             cell_value = sheet.cell(row=row, column=col).value
             print(f"Row/Col: {row}-{col} and cell value: {cell_value}")
-
-    #TODO Get the values to calculate from the correct months
-    # value_x = sheet[+"16"].value
-    # value_y = sheet[cell_y].value
+            total += cell_value
 
     #TODO Calculate all the expenses
 
     #TODO Call the write function to write the final value
 
     wb.close()
-    return True
+    return total
 
 
 # def write_cell(file_path:str, sheet_name: str, cell: str, value):
@@ -319,20 +317,27 @@ def main():
     sheet_1 = os.getenv("SHEET_1")
     sheet_2 = os.getenv("SHEET_2")
 
-    # Get starting month/column
+    # Get starting month/column, to transform month into corresponding number
     month_to_col = {
         'jan': 3,
         'fev': 4,
+        'feb': 4,
         'mar': 5,
         'abr': 6,
+        'apr': 6,
         'mai': 7,
+        'may': 7,
         'jun': 8,
         'jul': 9,
         'ago': 10,
+        'aug': 10,
         'set': 11,
+        'sep': 11,
         'out': 12,
+        'oct': 12,
         'nov': 13,
-        'dez': 14
+        'dez': 14,
+        'dec': 14
     }
 
     # Get file
@@ -347,12 +352,12 @@ def main():
     try:
         user_month = input("Enter starting month (Jan, Fev, Mar...): ").lower().strip()
         start_col = month_to_col.get(user_month)
-    except:
-        print("Invalid month!")
+    except Exception as e:
+        print(f"Invalid month with error: {e}")
     else:
         print(f'Valid month {user_month}!')
-        v_1 = read_cells(local_file, sheet_1, last_month, start_col)
-        print(v_1)
+        value_1 = read_cells(local_file, sheet_1, start_col, last_month)
+        print(value_1)
 
         #TODO Get the values from the second person
         # v_2 = read_cells(local_file, sheet_2)
