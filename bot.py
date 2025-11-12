@@ -52,18 +52,18 @@ async def fact(interaction: discord.Interaction):
     await interaction.response.send_message(f)
 
 
+#TODO Command to get the final price of who owes who, pinging the person
 @bot.tree.command(name="expenses", description="Gets who owes who money and how much")
-async def expenses(interaction: discord.Interaction, x: str):
-    print('started')
+async def expenses(interaction: discord.Interaction, month: str):
+    print('Calling function to get expenses result')
     await interaction.response.defer()
     try:
-        result = excel_work.main()
+        result = excel_work.main_function(month)
         print(result)
-        await interaction.followup.send(f"Expenses: {result}")
+        await interaction.followup.send(result)
     except Exception as e:
-        await interaction.followup.send(f"Error: {e}")
+        await interaction.followup.send(f"There was the following error: {e}")
 
-#TODO Read for command to get the final price of who owes who, pinging the person
 
 #TODO Read for command to write on excel file that the months are payed
 

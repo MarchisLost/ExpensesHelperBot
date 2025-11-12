@@ -255,8 +255,7 @@ def read_cells(file_path: str, sheet_name: str, start_col: int, last_column: int
                 print(f"Row/Col: {row}-{col} and cell value: {cell_value}")
                 total += cell_value
 
-    #TODO Call the write function to write the final value
-    print(type(total))
+    print(f'total: {total}')
     wb.close()
     return total
 
@@ -291,7 +290,7 @@ def get_last_month(file_path: str, sheet_name: str):
     return col
 
 
-def main():
+def main_function(month):
     load_dotenv()
     file_id = os.getenv("FILE_ID")
     sheet_1 = os.getenv("SHEET_1")
@@ -331,13 +330,21 @@ def main():
     # Get input of month to start from user, call functions to get the values, calcualte them and print result
     #TODO change the input from this function to discord command
     try:
-        user_month = input("Enter starting month (Jan, Fev, Mar...): ").lower().strip()
+        user_month = month.lower().strip()
         start_col = month_to_col.get(user_month)
+
+        if start_col is None:
+            error_message = f"Invalid month: {user_month}. Valid options: {', '.join(month_to_col.keys())}"
+            print(error_message)
+            return error_message
     except Exception as e:
-        print(f"Invalid month with error: {e}")
+        error_message = "Invalid month with error:" + str(e)
+        print(error_message)
+        return error_message
     else:
         print(f'Valid month {user_month}!')
 
+    try:
         # Get the values from the first person
         value_1 = read_cells(local_file, sheet_1, start_col, last_month)
         print(value_1)
@@ -351,13 +358,18 @@ def main():
         print(f'Final value: {final_value}')
 
         if final_value > 0:
-            print(f'Person 2 owes Person 1: {final_value}e')
+            result = "Person 2 owes Person 1: " + final_value + "e"
+            print(result)
         elif final_value < 0:
-            print(f'Person 1 owes Person 2: {final_value}e')
-    #TODO return a sentence saying who owes who as well
-    #TODO change the way to get the month to get it from discord command
-    return final_value
+            result = "Person 1 owes Person 2: " + final_value + "e"
+            print(result)
+        elif final_value == 0:
+            result = "Somehow you both spent the same amount - " + value_1 + "e"
+        else:
+            result = "Something that i dont know what happened..."
+        return result
 
-
-if __name__ == "__main__":
-    main()
+    except Exception as e:
+        error_message = "Error while processing the calculations:" + str(e)
+        print(error_message)
+        return error_message
