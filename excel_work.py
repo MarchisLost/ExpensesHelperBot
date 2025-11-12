@@ -328,7 +328,8 @@ def main():
     last_month = get_last_month(local_file, sheet_1)
     # print(last_month)
 
-    #TODO Get the values from first person
+    # Get input of month to start from user, call functions to get the values, calcualte them and print result
+    #TODO change the input from this function to discord command
     try:
         user_month = input("Enter starting month (Jan, Fev, Mar...): ").lower().strip()
         start_col = month_to_col.get(user_month)
@@ -353,6 +354,9 @@ def main():
             print(f'Person 2 owes Person 1: {final_value}e')
         elif final_value < 0:
             print(f'Person 1 owes Person 2: {final_value}e')
+    #TODO return a sentence saying who owes who as well
+    #TODO change the way to get the month to get it from discord command
+    return final_value
 
 
 if __name__ == "__main__":
