@@ -49,10 +49,10 @@ async def on_message(message: discord.Message):
 @bot.tree.command(name="annoy", description="Annoy her")
 async def fact(interaction: discord.Interaction):
     user2_id = 707366300267315243
-    await interaction.response.send_message(f'Heyyy bitchhh, <@{user2_id}>. \n how ya doing??')
+    await interaction.response.send_message(f'Heyyy bitchhh, <@{user2_id}>. \nHow ya doing??')
 
 
-#TODO Command to get the final price of who owes who, pinging the person
+# Command to get the final price of who owes who, pinging both users
 @bot.tree.command(name="expenses", description="Gets who owes who money and how much")
 async def expenses(interaction: discord.Interaction, month: str):
     # Ping multiple users by ID
@@ -62,9 +62,16 @@ async def expenses(interaction: discord.Interaction, month: str):
     print('Calling function to get expenses result')
     await interaction.response.defer()
     try:
-        result = excel_work.main_function(month)
+        result, value_1 = excel_work.main_function(month)
         print(result)
-        await interaction.followup.send(f'<@{user1_id}> <@{user2_id}> {result}')
+        if result > 0:
+            await interaction.followup.send(f'<@{user1_id}> owes <@{user2_id}> {result}e')
+        elif result < 0:
+            await interaction.followup.send(f'<@{user2_id}> owes <@{user1_id}> {result}e')
+        elif result == 0:
+            await interaction.followup.send("Somehow you both spent the same amount - " + str(value_1) + "e")
+        else:
+            await interaction.followup.send("Something that i dont know what happened...")
     except Exception as e:
         await interaction.followup.send(f"There was the following error: {e}")
 

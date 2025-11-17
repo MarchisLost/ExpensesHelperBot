@@ -356,18 +356,7 @@ def main_function(month):
         # Calculate who spent more and how much owes the other person
         final_value = round(value_1 - value_2, 2)
         print(f'Final value: {final_value}')
-
-        if final_value > 0:
-            result = "Person 2 owes Person 1: " + str(final_value) + "e"
-            print(result)
-        elif final_value < 0:
-            result = "Person 1 owes Person 2: " + str(final_value) + "e"
-            print(result)
-        elif final_value == 0:
-            result = "Somehow you both spent the same amount - " + str(value_1) + "e"
-        else:
-            result = "Something that i dont know what happened..."
-        return result
+        return final_value, value_1
 
     except Exception as e:
         error_message = "Error while processing the calculations:" + str(e)
