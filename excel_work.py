@@ -358,13 +358,13 @@ def main_function(month):
         print(f'Final value: {final_value}')
 
         if final_value > 0:
-            result = "Person 2 owes Person 1: " + final_value + "e"
+            result = "Person 2 owes Person 1: " + str(final_value) + "e"
             print(result)
         elif final_value < 0:
-            result = "Person 1 owes Person 2: " + final_value + "e"
+            result = "Person 1 owes Person 2: " + str(final_value) + "e"
             print(result)
         elif final_value == 0:
-            result = "Somehow you both spent the same amount - " + value_1 + "e"
+            result = "Somehow you both spent the same amount - " + str(value_1) + "e"
         else:
             result = "Something that i dont know what happened..."
         return result

@@ -46,21 +46,25 @@ async def on_message(message: discord.Message):
     if isinstance(message.channel, discord.DMChannel):
         await message.channel.send(f"Hi {message.author.name}, I got your DM: {message.content}")
 
-@bot.tree.command(name="fact", description="Get a random fact")
+@bot.tree.command(name="annoy", description="Annoy her")
 async def fact(interaction: discord.Interaction):
-    f = excel_work.main()
-    await interaction.response.send_message(f)
+    user2_id = 707366300267315243
+    await interaction.response.send_message(f'Heyyy bitchhh, <@{user2_id}>. \n how ya doing??')
 
 
 #TODO Command to get the final price of who owes who, pinging the person
 @bot.tree.command(name="expenses", description="Gets who owes who money and how much")
 async def expenses(interaction: discord.Interaction, month: str):
+    # Ping multiple users by ID
+    user1_id = 141180424964669440
+    user2_id = 707366300267315243
+
     print('Calling function to get expenses result')
     await interaction.response.defer()
     try:
         result = excel_work.main_function(month)
         print(result)
-        await interaction.followup.send(result)
+        await interaction.followup.send(f'<@{user1_id}> <@{user2_id}> {result}')
     except Exception as e:
         await interaction.followup.send(f"There was the following error: {e}")
 
